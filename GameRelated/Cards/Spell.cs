@@ -58,5 +58,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards
 
             return true;
         }
+
+        public virtual Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx) { return Task.CompletedTask; }
     }
 }

@@ -147,6 +147,55 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class SystemRebooter : Upgrade
+        {
+            public SystemRebooter() :
+                base(UpgradeSet.TinyInventions, "System Rebooter", 4, 3, 3, Rarity.Common, "Battlecry: Freeze an Upgrade. Give it Rush.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var upgrade = await PlayerInteraction.FreezeUpgradeInShopAsync(gameHandler, curPlayer, enemy, extraInf.ctx);
+
+                    upgrade.creatureData.staticKeywords[StaticKeyword.Rush]++;
+
+                    upgrade.cardText += " (Rush)";
+                }
+            }
+        }
+
+        [Upgrade]
+        public class BigFan : Upgrade
+        {
+            public BigFan() :
+                base(UpgradeSet.TinyInventions, "Big Fan", 4, 3, 3, Rarity.Common, "Battlecry: Freeze an Upgrade. Give it +3/+3 and Taunt.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var upgrade = await PlayerInteraction.FreezeUpgradeInShopAsync(gameHandler, curPlayer, enemy, extraInf.ctx);
+
+                    upgrade.creatureData.attack += 3;
+                    upgrade.creatureData.health += 3;
+
+                    upgrade.creatureData.staticKeywords[StaticKeyword.Taunt]++;
+
+                    upgrade.cardText += " (Taunt)";
+                }
+            }
+        }
+
+        [Upgrade]
         public class GoldBolts : Upgrade
         {
             public GoldBolts() :

@@ -410,6 +410,7 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
                 return;
             };
 
+            //calls the Command method that starts an automatic game
             await AutomaticGame(ctx, BotHandler.openRooms[ctx.User.Id]);
         }
 
@@ -535,8 +536,26 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
             }
         }
 
+        private async Task WaitToProceedToFights(Room room)
+        {
+            room.gameHandler.waitingTokenSource = new CancellationTokenSource();
+
+
+            Task waitForAllReady = new Task<bool>(() =>
+            {
+                while (room.gameHandler.amountReady < room.gameHandler.AlivePlayers) ;
+                
+                return true;
+            });
+
+            waitForAllReady.Start();
+
+            await Task.WhenAny(Task.Delay(TimeSpan.FromMinutes(10)), waitForAllReady);
+        }
+
         public async Task AutomaticGame(CommandContext ctx, Room room)
         {
+            //calls the Room command that starts a game / tries to start the Room
             bool successfulStart = await room.StartGame(ctx);
 
             if (!successfulStart)
@@ -555,12 +574,60 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
                 Color = DiscordColor.Green
             }).ConfigureAwait(false);
 
-
-            await BotHandler.openRooms[ctx.User.Id].gameHandler.SendShopsAsync(ctx).ConfigureAwait(false);
-
-            while (room.gameHandler.AlivePlayers > 1)
+            do
             {
+                //send shops
+                await room.gameHandler.SendShopsAsync(ctx).ConfigureAwait(false);
+                //show pairs 
+                await PairsList(ctx);
+                //make a msg that updates on ready
+                await room.gameHandler.SendNewInteractivePlayerList(ctx);
 
+                //wait for all players to ready
+                await WaitToProceedToFights(room);
+
+                //do end of turn
+                foreach (var player in room.gameHandler.players)
+                {
+                    await player.Value.TriggerEndOfTurn(room.gameHandler, player.Key, room.gameHandler.pairsHandler.opponents[player.Key], ctx);
+                }
+
+                //do the fights
+                await DoAllFights(ctx);
+
+                if (room.gameHandler.AlivePlayers > 1)
+                {
+                    await NextRound(ctx);
+                }
+
+            } while (room.gameHandler.AlivePlayers > 1);
+
+            ulong winner = 0;
+            
+            foreach (var player in room.gameHandler.players)
+            {
+                if (player.Value.lives > 0)
+                {
+                    winner = player.Key;
+                    break;
+                }
+            }
+
+            if (winner == 0)
+            {
+                return;
+            }
+
+            await room.gameHandler.outputChannel.SendMessageAsync(new DiscordEmbedBuilder { 
+                Title = $"{room.nicknames[winner]} Is The Winner!",
+                Color = DiscordColor.Gold
+            }).ConfigureAwait(false);
+
+            foreach (var player in room.gameHandler.players)
+            {
+                BotHandler.SetUserState(player.Key, UserState.WaitingInRoom);
+
+                if (room.hostId == player.Key) BotHandler.SetUserState(player.Key, UserState.HostingARoom);
             }
         }
 
@@ -601,9 +668,9 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
             
         }
 
-        [Aliases("pairlist")]
-        [Command("pairslist")]
-        [RequireGuild]
+        //[Aliases("pairlist")]
+        //[Command("pairslist")]
+        //[RequireGuild]
         [UserState(UserState.InGame)]
         public async Task PairsList(CommandContext ctx)
         {
@@ -639,7 +706,8 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
                 Color = DiscordColor.Azure
             };
 
-            await ctx.RespondAsync(embed: responseMessage).ConfigureAwait(false);
+            await gameHandler.outputChannel.SendMessageAsync(embed: responseMessage).ConfigureAwait(false);
+            //await ctx.RespondAsync(embed: responseMessage).ConfigureAwait(false);
         }
     }
 }

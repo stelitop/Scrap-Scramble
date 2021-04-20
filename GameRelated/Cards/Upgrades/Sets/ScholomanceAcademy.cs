@@ -401,7 +401,10 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                     {
                         if (caller.name.Length > 0)
                         {
-                            if (caller.name[0] == this._letter)
+                            string s = $"{caller.name[0]}";
+                            string c = $"{this._letter}";
+
+                            if (s.Equals(c, StringComparison.OrdinalIgnoreCase))
                             {
                                 gameHandler.players[curPlayer].creatureData.attack += 2;
                             }

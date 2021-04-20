@@ -151,6 +151,7 @@
     <Compile Include="Bot.cs" />
     <Compile Include="BotRelated\BotHandler.cs" />
     <Compile Include="BotRelated\Commands\Fun Commands.cs" />
+    <Compile Include="BotRelated\Commands\GameCommands\InformationCommands.cs" />
     <Compile Include="BotRelated\Commands\GameCommands\MechCustomizationCommands.cs" />
     <Compile Include="BotRelated\Commands\GameCommands\PlayerOnlyCommands.cs" />
     <Compile Include="BotRelated\Commands\GameCommands\RoomCommands.cs" />

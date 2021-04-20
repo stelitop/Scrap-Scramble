@@ -52,7 +52,16 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
                 this.output = new List<string>();
                 this.dmg = damage;
             }
+        }
 
+        public class CardInHandInfo : ExtraEffectInfo
+        {
+            public int handPos;
+
+            public CardInHandInfo(CommandContext ctx, int handPos) : base(ctx)
+            {
+                this.handPos = handPos;
+            }
         }
     }
 

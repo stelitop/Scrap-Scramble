@@ -16,9 +16,9 @@ namespace Scrap_Scramble_Final_Version.BotRelated
 
         public static SetHandler setHandler = new SetHandler();
 
-        public readonly static Dictionary<ulong, UserState> _userState = new Dictionary<ulong, UserState>();        
+        public readonly static Dictionary<ulong, UserState> _userState = new Dictionary<ulong, UserState>();
 
-
+        public readonly static CardPool generalCardPool = new CardPool();
         public static UserState GetUserState(ulong id)
         {
             if (_userState.ContainsKey(id)) return _userState[id];

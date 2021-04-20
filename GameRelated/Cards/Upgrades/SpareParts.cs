@@ -28,7 +28,17 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] += 4;
                     return Task.CompletedTask;
                 }
-            }            
+            }
+
+            public override Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx) 
+            {
+                Upgrade u = gameHandler.players[curPlayer].shop.At(shopPos);
+
+                u.creatureData.attack += 2;
+                u.creatureData.staticKeywords[StaticKeyword.Spikes] += 4;
+
+                return Task.CompletedTask; 
+            }
         }
 
         [SparePartAttribute]
@@ -49,7 +59,17 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 4;
                     return Task.CompletedTask;
                 }
-            }            
+            }
+
+            public override Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                Upgrade u = gameHandler.players[curPlayer].shop.At(shopPos);
+
+                u.creatureData.health += 2;
+                u.creatureData.staticKeywords[StaticKeyword.Shields] += 4;
+
+                return Task.CompletedTask;
+            }
         }
 
         [SparePartAttribute]
@@ -71,7 +91,18 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     gameHandler.players[curPlayer].creatureData.health = mid;
                     return Task.CompletedTask;
                 }
-            }            
+            }
+
+            public override Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                Upgrade u = gameHandler.players[curPlayer].shop.At(shopPos);
+
+                int mid = u.creatureData.attack;
+                u.creatureData.attack += u.creatureData.health;
+                u.creatureData.health = mid;
+
+                return Task.CompletedTask;
+            }
         }
 
         [SparePartAttribute]
@@ -91,7 +122,16 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Rush]++;
                     return Task.CompletedTask;
                 }
-            }            
+            }
+
+            public override Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                Upgrade u = gameHandler.players[curPlayer].shop.At(shopPos);
+
+                u.creatureData.staticKeywords[StaticKeyword.Rush] += 1;
+
+                return Task.CompletedTask;
+            }
         }
 
         [SparePartAttribute]
@@ -113,7 +153,17 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     gameHandler.players[curPlayer].creatureData.health += 3;
                     return Task.CompletedTask;
                 }
-            }          
+            }
+            public override Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                Upgrade u = gameHandler.players[curPlayer].shop.At(shopPos);
+
+                u.creatureData.attack += 3;
+                u.creatureData.health += 3;
+                u.creatureData.staticKeywords[StaticKeyword.Taunt] += 1;
+
+                return Task.CompletedTask;
+            }
         }
 
         [SparePartAttribute]
@@ -133,7 +183,14 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     gameHandler.players[curPlayer].curMana += 2;
                     return Task.CompletedTask;
                 }
-            }            
+            }
+
+            public override Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                gameHandler.players[curPlayer].curMana += 2;
+
+                return Task.CompletedTask;
+            }
         }
 
         [SparePartAttribute]
@@ -155,7 +212,20 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades
                     chosen.creatureData.attack += 4;
                     chosen.creatureData.health += 4;
                 }
-            }            
+            }
+
+            public override async Task CastOnUpgradeInShop(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                Upgrade u = gameHandler.players[curPlayer].shop.At(shopPos);
+
+                u.creatureData.attack += 4;
+                u.creatureData.health += 4;
+
+                u.creatureData.staticKeywords[StaticKeyword.Freeze] = Math.Max(1, u.creatureData.staticKeywords[StaticKeyword.Freeze]);
+
+                var generalInfo = new ExtraEffectInfo(ctx);
+                await Effect.CallEffects(u.effects, Effect.EffectType.OnBeingFrozen, u, gameHandler, curPlayer, enemy, generalInfo);
+            }
         }
     }
 }

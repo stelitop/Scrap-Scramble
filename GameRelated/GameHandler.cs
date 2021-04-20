@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Scrap_Scramble_Final_Version.GameRelated
@@ -26,9 +27,14 @@ namespace Scrap_Scramble_Final_Version.GameRelated
 
         public int currentRound = 1;
 
+        public int amountReady = 0;
+
         public GameSettings gameSettings;
 
         public DiscordChannel outputChannel;
+        public DiscordMessage playerListMessage;
+
+        public CancellationTokenSource waitingTokenSource;
 
         public GameHandler()
         {
@@ -39,7 +45,11 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             this.pairsHandler = new PairsHandler();
             //this.combatOutputCollector = new CombatOutputCollector();
             this.gameSettings = new GameSettings();
+
             this.outputChannel = null;
+            this.playerListMessage = null;
+
+            this.waitingTokenSource = null;
         }
 
         public void AddPlayer(ulong id, string name)
@@ -61,9 +71,10 @@ namespace Scrap_Scramble_Final_Version.GameRelated
         public Task StartNewGame(Room room, CommandContext ctx)
         {           
             this.curMaxMana = this.gameSettings.startingMana;
+            this.amountReady = 0;
             
             CardPool pool = new CardPool();
-            pool.FillCardPoolWithSets(this.gameSettings.setAmount, BotHandler.setHandler);
+            pool.FillCardPoolWithSets(this.gameSettings.setAmount, BotHandler.setHandler);            
             
             this.players.Clear();
             this.currentRound = 1;
@@ -81,6 +92,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated
                 this.players[id].ready = false;                
             }
             
+            //calls the next pairs method
             this.pairsHandler = new PairsHandler(this);
             this.pairsHandler.NextRoundPairs(this);
 
@@ -93,7 +105,8 @@ namespace Scrap_Scramble_Final_Version.GameRelated
         {
             Console.WriteLine("Frog1");
             this.currentRound++;
-            //this.pairsHandler.NextRoundPairs(this);
+            this.pairsHandler.NextRoundPairs(this);
+            this.amountReady = 0;
             Console.WriteLine("Frog2");
             int newMana = Math.Max(0, Math.Min(5, this.gameSettings.maxManaCap - this.curMaxMana));
 
@@ -302,7 +315,9 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             if (this.players[mech1].IsAlive())
             {
                 outputCollector.combatOutput.Add($"{this.players[mech1].name} has won!");
-                this.players[mech2].lives--;
+
+                if (this.players[mech1].specificEffects.invertAttackPriority || this.players[mech2].specificEffects.invertAttackPriority) this.players[mech1].lives++;
+                else this.players[mech2].lives--;
 
                 this.pairsHandler.playerResults[this.pairsHandler.playerResults.Count - 1][mech1] = FightResult.WIN;
                 this.pairsHandler.playerResults[this.pairsHandler.playerResults.Count - 1][mech2] = FightResult.LOSS;
@@ -310,7 +325,9 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             else
             {
                 outputCollector.combatOutput.Add($"{this.players[mech2].name} has won!");
-                this.players[mech1].lives--;
+
+                if (this.players[mech1].specificEffects.invertAttackPriority || this.players[mech2].specificEffects.invertAttackPriority) this.players[mech2].lives++;
+                else this.players[mech1].lives--;
 
                 this.pairsHandler.playerResults[this.pairsHandler.playerResults.Count - 1][mech1] = FightResult.LOSS;
                 this.pairsHandler.playerResults[this.pairsHandler.playerResults.Count - 1][mech2] = FightResult.WIN;
@@ -346,6 +363,51 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             foreach (var player in this.players)
             {
                 await player.Value.SendNewPlayerUI(ctx, this, player.Key);
+            }
+        }
+
+
+        private async Task<DiscordEmbedBuilder> GetInteractivePlayerListEmbedAsync(CommandContext ctx)
+        {
+            string description = string.Empty;
+
+            foreach (var player in this.players)
+            {
+                if (!description.Equals(string.Empty)) description += '\n';
+
+                if (player.Value.lives < 1) description += ":skull:";
+                else if (player.Value.ready) description += ":green_square: ";
+                else description += ":red_square: ";
+
+                description += $"{player.Value.name} ({(await ctx.Client.GetUserAsync(player.Key)).Username})";
+
+                if (player.Value.lives >= 1) description += $" - Lives: {player.Value.lives}";
+            }
+
+            DiscordEmbedBuilder ret = new DiscordEmbedBuilder { 
+                Title = "List of Players",
+                Description = description,
+                Color = DiscordColor.Azure
+            };
+
+            return ret;
+        }
+        public async Task SendNewInteractivePlayerList(CommandContext ctx)
+        {
+            if (this.outputChannel == null) return;
+
+            this.playerListMessage = await this.outputChannel.SendMessageAsync((await this.GetInteractivePlayerListEmbedAsync(ctx)).Build()).ConfigureAwait(false);
+            
+        }
+        public async Task RefreshInteractivePlayerList(CommandContext ctx)
+        {
+            if (this.playerListMessage == null)
+            {
+                await this.SendNewInteractivePlayerList(ctx);
+            }
+            else
+            {
+                await this.playerListMessage.ModifyAsync((await this.GetInteractivePlayerListEmbedAsync(ctx)).Build()).ConfigureAwait(false);
             }
         }
     }

@@ -103,6 +103,92 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class TrafficCone : Upgrade
+        {
+            public TrafficCone() :
+                base(UpgradeSet.EdgeOfScience, "Traffic Cone", 2, 2, 1, Rarity.Common, "Binary. Battlecry: Gain +2 Spikes. Overload: (1)")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] += 2;
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class ShieldbotClanker : Upgrade
+        {
+            public ShieldbotClanker() :
+                base(UpgradeSet.EdgeOfScience, "Shieldbot Clanker", 5, 2, 4, Rarity.Common, "Battlecry and Aftermath : Gain +8 Shields.")
+            {
+                this.effects.Add(new Battlecry());
+                this.effects.Add(new Aftermath());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 8;
+                    return Task.CompletedTask;
+                }
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Gain +8 Shields.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 8;
+                    gameHandler.players[curPlayer].aftermathMessages.Add(
+                        $"Your Shieldbot Clanker gives you +8 Shields.");
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class SpikebotShanker : Upgrade
+        {
+            public SpikebotShanker() :
+                base(UpgradeSet.EdgeOfScience, "Spikebot Shanker", 5, 4, 2, Rarity.Common, "Battlecry and Aftermath : Gain +8 Spikes.")
+            {
+                this.effects.Add(new Battlecry());
+                this.effects.Add(new Aftermath());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] += 8;
+                    return Task.CompletedTask;
+                }
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Gain +8 Spikes.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] += 8;
+                    gameHandler.players[curPlayer].aftermathMessages.Add(
+                        $"Your Spikebot Shanker gives you +8 Spikes.");
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
         public class IndecisiveAutoshopper : Upgrade
         {
             public IndecisiveAutoshopper() :
@@ -385,9 +471,66 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
     
-        //TODO: Mass Acceerator
+        [Upgrade]
+        public class MassAccelerator : Upgrade
+        {
+            public MassAccelerator() :
+                base(UpgradeSet.EdgeOfScience, "Mass Accelerator", 6, 5, 5, Rarity.Epic, "Start of Combat: If you're Overloaded, deal 10 damage to the enemy Mech.")
+            {
+                this.effects.Add(new StartOfCombat());
+            }
+            private class StartOfCombat : Effect
+            {
+                public StartOfCombat() : base(EffectType.StartOfCombat, "Start of Combat: If you're Overloaded, deal 10 damage to the enemy Mech.", EffectDisplayMode.Public) { }
 
-        //TODO: Rework Philosopher's Stone
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var info = extraInf as ExtraEffectInfo.StartOfCombatInfo;
+
+                    if (gameHandler.players[curPlayer].overloaded > 0 || gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Overload] > 1)
+                    {
+                        var dmgInfo = new ExtraEffectInfo.DamageInfo(extraInf.ctx, 10, $"{gameHandler.players[curPlayer].name}'s Mass Accelerator triggers, dealing 10 damage, ");
+                        await gameHandler.players[enemy].TakeDamage(gameHandler, curPlayer, enemy, dmgInfo);
+                        info.output.Add(dmgInfo.output);
+                    }
+                    else
+                    {
+                        info.output.Add($"{gameHandler.players[curPlayer].name}'s Mass Accelerator failed to trigger.");
+                    }                    
+                }
+            }
+        }
+
+        [Upgrade]
+        public class PhilosophersStone : Upgrade
+        {
+            public PhilosophersStone() :
+                base(UpgradeSet.EdgeOfScience, "Philosopher's Stone", 3, 1, 1, Rarity.Epic, "Battlecry: Transform your Common Upgrades into random Legendary ones.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    List<int> shopIndexes = gameHandler.players[curPlayer].shop.GetAllUpgradeIndexes();
+
+                    List<Upgrade> legendaries = CardsFilter.FilterList<Upgrade>(gameHandler.players[curPlayer].pool.upgrades, x => x.rarity == Rarity.Legendary);
+
+                    foreach (var index in shopIndexes)
+                    {
+                        if (gameHandler.players[curPlayer].shop.At(index).rarity == Rarity.Common)
+                        {
+                            gameHandler.players[curPlayer].shop.TransformUpgrade(index, legendaries[GameHandler.randomGenerator.Next(legendaries.Count)]);
+                        }
+                    }
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
 
         [Upgrade]
         public class ParadoxEngine : Upgrade

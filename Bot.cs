@@ -6,6 +6,7 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Scrap_Scramble_Final_Version.BotRelated;
 using Scrap_Scramble_Final_Version.BotRelated.Commands;
 using Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands;
 using ScrapScramble;
@@ -69,6 +70,7 @@ namespace Scrap_Scramble_Final_Version
             Commands.RegisterCommands<RoomCommands>();
             Commands.RegisterCommands<PlayerOnlyCommands>();
             Commands.RegisterCommands<MechCustomizationCommands>();
+            Commands.RegisterCommands<InformationCommands>();
             //Commands.RegisterCommands<GameCommands>();
             //Commands.RegisterCommands<GameOperatorCommands>();
             //Commands.RegisterCommands<GameSettingsCommands>();
@@ -82,6 +84,8 @@ namespace Scrap_Scramble_Final_Version
         private async Task OnClientReady(DiscordClient client, ReadyEventArgs e)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
+            //load the basic card pool for information purposes
+            BotHandler.generalCardPool.FillGenericCardPool();
 
             //this.LoadKeywordsFromWebsite();
 

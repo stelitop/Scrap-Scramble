@@ -103,6 +103,11 @@ namespace Scrap_Scramble_Final_Version.GameRelated
 
                 players = players.OrderBy(x => GameHandler.randomGenerator.Next()).ToList();
 
+                if (players.Count() % 2 == 1)
+                {
+                    players.RemoveAt(0);
+                }
+
                 for (int i = 0; i < players.Count(); i += 2)
                 {
                     if (this.opponents[players[i]] == players[i + 1] && times < 8)

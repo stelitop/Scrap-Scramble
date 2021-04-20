@@ -114,6 +114,38 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class ByteBarker : Upgrade
+        {
+            public ByteBarker() :
+                base(UpgradeSet.MonstersReanimated, "Byte Barker", 6, 4, 4, Rarity.Rare, "Binary. Choose One - Gain +6 Spikes; or +6 Shields.")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Binary] = 1;
+                this.effects.Add(new ChooseOne());   
+            }
+            private class ChooseOne : Effect
+            {
+                public ChooseOne() : base(EffectType.OnPlay) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    PlayerInteraction chooseOne = new PlayerInteraction("Choose One", "1) Gain +6 Spikes\n2) Gain +6 Shields", "Write the corresponding number");
+                    string defaultAns = GameHandler.randomGenerator.Next(1, 3).ToString();
+
+                    string ret = await chooseOne.SendInteractionAsync(gameHandler, curPlayer, (x, y, z) => GeneralFunctions.Within(x, 1, 2), defaultAns, extraInf.ctx);
+
+                    if (int.Parse(ret) == 1)
+                    {
+                        gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] += 6;
+                    }
+                    else if (int.Parse(ret) == 2)
+                    {
+                        gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 6;
+                    }
+                }
+            }
+        }
+
+        [Upgrade]
         public class DungeonDragonling : Upgrade
         {
             public DungeonDragonling() :
@@ -144,6 +176,69 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class MorphingNanoswarm : Upgrade
+        {
+            public MorphingNanoswarm() :
+                base(UpgradeSet.MonstersReanimated, "Morphing Nanoswarm", 3, 3, 3, Rarity.Epic, "While this is in your shop, this is a copy of the last Upgrade you bought this turn.")
+            {
+
+            }
+
+            public override string GetInfo(GameHandler gameHandler, ulong player)
+            {
+                if (gameHandler.players[player].buyHistory.Last().Count == 0)
+                    return base.GetInfo(gameHandler, player);
+                if (gameHandler.players[player].buyHistory.Last().Last().name == "Morphing Nanoswarm" || gameHandler.players[player].buyHistory.Last().Last().name == this.name)
+                    return base.GetInfo(gameHandler, player);
+
+                    string ret;
+
+                Upgrade u = gameHandler.players[player].buyHistory.Last().Last();
+
+                string rarity = $"{u.rarity} - ";
+                if (u.rarity == Rarity.NO_RARITY) rarity = string.Empty;
+
+                if (u.cardText.Equals(string.Empty)) ret = $"{u.name} (Morphing Nanoswarm) - {rarity}{u.Cost}/{u.creatureData.attack}/{u.creatureData.health}";
+                else ret = $"{u.name} (Morphing Nanoswarm) - {rarity}{u.Cost}/{u.creatureData.attack}/{u.creatureData.health} - {u.cardText}";
+
+                if (this.creatureData.staticKeywords[StaticKeyword.Freeze] == 1) ret = $"(Frozen for 1 turn) {ret}";
+                else if (this.creatureData.staticKeywords[StaticKeyword.Freeze] > 1) ret = $"(Frozen for {this.creatureData.staticKeywords[StaticKeyword.Freeze]} turns) {ret}";
+                return ret;
+            }
+
+            public override bool CanBeBought(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy)
+            {
+
+                if (gameHandler.players[curPlayer].buyHistory.Last().Count == 0)
+                    return base.CanBeBought(shopPos, gameHandler, curPlayer, enemy);
+                if (gameHandler.players[curPlayer].buyHistory.Last().Last().name == "Morphing Nanoswarm" || gameHandler.players[curPlayer].buyHistory.Last().Last().name == this.name)
+                    return base.CanBeBought(shopPos, gameHandler, curPlayer, enemy);
+
+                Upgrade u = gameHandler.players[curPlayer].buyHistory.Last().Last();
+
+                return u.CanBeBought(shopPos, gameHandler, curPlayer, enemy);
+            }
+
+            public override async Task<bool> BuyCard(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                if (gameHandler.players[curPlayer].buyHistory.Last().Count == 0)
+                    return (await base.BuyCard(shopPos, gameHandler, curPlayer, enemy, ctx));
+                if (gameHandler.players[curPlayer].buyHistory.Last().Last().name == "Morphing Nanoswarm" || gameHandler.players[curPlayer].buyHistory.Last().Last().name == this.name)
+                    return (await base.BuyCard(shopPos, gameHandler, curPlayer, enemy, ctx));
+
+                Upgrade u = gameHandler.players[curPlayer].buyHistory.Last().Last();
+
+                gameHandler.players[curPlayer].curMana -= u.Cost;
+
+                ExtraEffectInfo extraInf = new ExtraEffectInfo(ctx);
+                await Effect.CallEffects(gameHandler.players[curPlayer].effects, Effect.EffectType.OnBuyingAMech, u, gameHandler, curPlayer, enemy, extraInf);
+
+                await gameHandler.players[curPlayer].AttachMech(u, gameHandler, curPlayer, enemy, ctx);
+                return true;
+            }
+        }
+
+        [Upgrade]
         public class LadyInByte : Upgrade
         {
             public LadyInByte() :
@@ -165,6 +260,38 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                 }
             }
         }
+
+        [Upgrade]
+        public class GuardianAngel : Upgrade
+        {
+            public GuardianAngel() :
+                base(UpgradeSet.MonstersReanimated, "Guardian Angel", 6, 6, 6, Rarity.Legendary, "The winner of your next combat gains a life instead of the loser losing a life. You won't see this in your shop for the rest of the game.")
+            {
+                this.effects.Add(new OnPlay());
+            }
+            private class OnPlay : Effect
+            {
+                public OnPlay() : base(EffectType.OnPlay, "The winner of your next combat gains a life instead of the loser losing a life. You won't see this in your shop for the rest of the game.", EffectDisplayMode.Public) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].specificEffects.invertLossPenalty = true;
+
+                    for (int i=0; i < gameHandler.players[curPlayer].pool.upgrades.Count(); i++)
+                    {
+                        if (gameHandler.players[curPlayer].pool.upgrades[i].name == "Guardian Angel")
+                        {
+                            gameHandler.players[curPlayer].pool.upgrades.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+
 
         [Token]
         public class Mechathun : Upgrade
@@ -405,6 +532,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             {
                 this.effects.Add(new GenerateMechathunEffect());
                 this.effects.Add(new Battlecry());
+                this.creatureData.staticKeywords[StaticKeyword.Overload] = 3;
             }
             private class Battlecry : Effect
             {

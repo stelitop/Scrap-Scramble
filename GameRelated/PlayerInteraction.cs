@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
 using Scrap_Scramble_Final_Version.GameRelated.Cards;
+using Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,6 +166,9 @@ namespace Scrap_Scramble_Final_Version.GameRelated
 
             chosen.creatureData.staticKeywords[StaticKeyword.Freeze] = Math.Max(freezeAmount, chosen.creatureData.staticKeywords[StaticKeyword.Freeze]);
             //chosen.OnBeingFrozen(gameHandler, curPlayer, enemy);
+
+            var generalInfo = new ExtraEffectInfo(ctx);
+            await Effect.CallEffects(chosen.effects, Effect.EffectType.OnBeingFrozen, chosen, gameHandler, curPlayer, enemy, generalInfo);
 
             return chosen;
         }

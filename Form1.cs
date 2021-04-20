@@ -27,6 +27,7 @@ namespace Scrap_Scramble_Final_Version
         {            
             InitializeComponent();
 
+
             var tr = new ControlWriter(ListBoxLogging);
 
             Console.SetOut(tr);
@@ -90,6 +91,8 @@ namespace Scrap_Scramble_Final_Version
         {
             ListBoxTesting.Items.Clear();
 
+            int totalCards = 0;
+
             foreach (var set in BotHandler.setHandler.Sets)
             {
                 string msg = string.Empty;
@@ -115,11 +118,14 @@ namespace Scrap_Scramble_Final_Version
                         default:
                             break;
                     }
+
+                    totalCards++;
                 }
 
                 msg += $"{_l}/{_e}/{_r}/{_c} - Total : {_l+_e+_r+_c}";
                 ListBoxTesting.Items.Add(msg);
             }
+            ListBoxTesting.Items.Add($"Total Upgrades: {totalCards}");
         }
     }
 

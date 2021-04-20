@@ -279,6 +279,18 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             //return result;
         }
 
+
+        public async Task TriggerEndOfTurn(GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+        {
+            var cards = this.hand.GetAllCardIndexes();
+            foreach (var cardIndex in cards)
+            {
+                ExtraEffectInfo.CardInHandInfo info = new ExtraEffectInfo.CardInHandInfo(ctx, cardIndex);
+                Card card = this.hand.At(cardIndex);
+                await Effect.CallEffects(card.effects, Effect.EffectType.EndOfTurnInHand, card, gameHandler, curPlayer, enemy, info);
+            }
+        }
+
         public string GetUpgradesList(out int rows, bool respectHidden = true)
         {
             if (respectHidden && this.specificEffects.hideUpgradesInLog)

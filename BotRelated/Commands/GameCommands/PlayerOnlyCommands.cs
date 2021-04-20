@@ -47,7 +47,11 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
                 //valid pos
                 await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":+1:")).ConfigureAwait(false);
 
-                player.ready = false;
+                if (player.ready)
+                {
+                    player.ready = false;
+                    room.gameHandler.amountReady--;
+                }
                 //BotInfoHandler.RefreshPlayerList(ctx);
 
                 await player.RefreshPlayerUI(room.gameHandler, ctx.User.Id);
@@ -78,7 +82,11 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
                 //valid pos
                 await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":+1:")).ConfigureAwait(false);
 
-                player.ready = false;
+                if (player.ready)
+                {
+                    player.ready = false;
+                    room.gameHandler.amountReady--;
+                }
                 //BotInfoHandler.RefreshPlayerList(ctx);
 
                 await player.RefreshPlayerUI(room.gameHandler, ctx.User.Id);
@@ -111,35 +119,42 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
                     Color = DiscordColor.Green
                 };
                 player.ready = true;
+                room.gameHandler.amountReady++;
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                room.gameHandler.outputChannel.SendMessageAsync(new DiscordEmbedBuilder {
-                    Title = $"{player.name} Has Readied!",
-                    Color = DiscordColor.Azure
-                }).ConfigureAwait(false);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                //int totalReady = 0;
+                //foreach (var _player in room.gameHandler.players)
+                //{
+                //    if (_player.Value.ready) totalReady++;
+                //}
 
-                int totalReady = 0;
-                foreach (var _player in room.gameHandler.players)
-                {
-                    if (_player.Value.ready) totalReady++;
-                }
+                //if (totalReady == room.players.Count)
+                //{
+                //    await Task.Delay(1000);
 
-                if (totalReady == room.players.Count)
-                {
-                    await Task.Delay(1000);
+                //    await room.gameHandler.outputChannel.SendMessageAsync(new DiscordEmbedBuilder { 
+                //        Title = "All Player Have Readied!",
+                //        Description = "Use \"room dofights\" to start all fights between the players.",
+                //        Color = DiscordColor.Gold
+                //    }).ConfigureAwait(false);
+                //}
 
-                    await room.gameHandler.outputChannel.SendMessageAsync(new DiscordEmbedBuilder { 
-                        Title = "All Player Have Readied!",
-                        Description = "Use \"room dofights\" to start all fights between the players.",
-                        Color = DiscordColor.Gold
-                    }).ConfigureAwait(false);
-                }
-
-                //BotInfoHandler.RefreshPlayerList(ctx);
+                await room.gameHandler.RefreshInteractivePlayerList(ctx);
             }
 
             await ctx.RespondAsync(embed: responseMessage).ConfigureAwait(false);
+        }
+
+        [Command("refresh")]
+        [Description("Debug only command. Refreshes the player's shop with a new shop.")]
+        public async Task RefreshShopDebug(CommandContext ctx)
+        {
+
+            Room room = BotHandler.Rooms.GetUserRoom(ctx.User.Id);
+            Player player = BotHandler.Rooms.GetUserPlayer(ctx.User.Id);
+
+            player.shop.Refresh(room.gameHandler, player.pool, player.maxMana);
+
+            await RefreshUserUI(ctx);
         }
     }
 }

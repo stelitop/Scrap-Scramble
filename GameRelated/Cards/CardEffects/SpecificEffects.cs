@@ -12,6 +12,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
         public bool invertAttackPriority;
         public bool ignoreSpikes, ignoreShields;
         public int multiplierStartOfCombat;
+        public bool invertLossPenalty;
 
         public SpecificEffects()
         {
@@ -20,6 +21,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
             ignoreShields = false;
             ignoreSpikes = false;
             multiplierStartOfCombat = 1;
+            invertLossPenalty = false;
         }
     }
 }

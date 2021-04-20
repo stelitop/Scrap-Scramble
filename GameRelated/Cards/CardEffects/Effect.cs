@@ -31,6 +31,8 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
             AfterThisTakesDamage,
             BeforeTakingDamage,
             AfterTheEnemyAttacks,
+            EndOfTurnInHand,
+            OnBeingFrozen,
         }
 
         public string effectText;

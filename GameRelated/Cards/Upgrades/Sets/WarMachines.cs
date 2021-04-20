@@ -293,8 +293,32 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         //TODO: Add Power Prowler
+        
+        [Upgrade]
+        public class TestMissile : Upgrade
+        {
+            public TestMissile() : 
+                base(UpgradeSet.WarMachines, "Test Missile", 4, 3, 4, Rarity.Rare, "Binary. At the end of your turn in your hand, give this +1/+1.")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Binary] = 1;
+                this.effects.Add(new EndOfTurn());
+            }
+            private class EndOfTurn : Effect
+            {
+                public EndOfTurn() : base(EffectType.EndOfTurnInHand) { }
 
-        //TODO: Test Missile
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (caller is Upgrade u)
+                    {
+                        u.creatureData.attack++;
+                        u.creatureData.health++;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
 
         [Upgrade]
         public class CopperCommander : Upgrade
@@ -306,7 +330,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
             private class OnPlay : Effect
             {
-                public OnPlay() : base(EffectType.OnPlay) { }
+                public OnPlay() : base(EffectType.OnPlay, "Your Start of Combat effects trigger twice.", EffectDisplayMode.Public) { }
 
                 public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
                 {
@@ -316,9 +340,105 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO: Add Part Assembler
+        [Upgrade]
+        public class PartAssembler : Upgrade
+        {
+            public PartAssembler() : 
+                base(UpgradeSet.WarMachines, "Part Assembler", 4, 3, 3, Rarity.Epic, "Costs (2) less while you have Spikes. Costs (2) less while you have Shields.")
+            {
 
-        //TODO: Add Ogrimmar Juggernaut
+            }
+
+            public override bool CanBeBought(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy)
+            {
+                if (shopPos >= gameHandler.players[curPlayer].shop.LastIndex) return false;
+                if (this.name == BlankUpgrade.name) return false;
+                if (this.creatureData.staticKeywords[StaticKeyword.Freeze] > 0) return false;
+                //if (this.inLimbo) return false;
+
+                int red = 0;
+                if (gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] > 0) red += 2;
+                if (gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] > 0) red += 2;
+
+                if (this.Cost - red > gameHandler.players[curPlayer].curMana) return false;
+
+                return true;
+            }
+
+            public override Task<bool> BuyCard(int shopPos, GameHandler gameHandler, ulong curPlayer, ulong enemy, CommandContext ctx)
+            {
+                if (gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] > 0) this.Cost -= 2;
+                if (gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Spikes] > 0) this.Cost -= 2;
+
+                return base.BuyCard(shopPos, gameHandler, curPlayer, enemy, ctx);
+            }
+
+            public override string GetInfo(GameHandler gameHandler, ulong player)
+            {
+                int red = 0;
+
+                if (gameHandler.players[player].creatureData.staticKeywords[StaticKeyword.Shields] > 0) red += 2;
+                if (gameHandler.players[player].creatureData.staticKeywords[StaticKeyword.Spikes] > 0) red += 2;
+
+                int oldCost = this.Cost;
+                this.Cost -= red;
+
+                string ret = base.GetInfo(gameHandler, player);
+
+                this.Cost = oldCost;
+
+                return ret;
+            }
+        }
+
+        [Upgrade]
+        public class OgrimmarJuggernaut : Upgrade
+        {
+            public OgrimmarJuggernaut() :
+                base(UpgradeSet.WarMachines, "Ogrimmar Juggernaut", 7, 6, 5, Rarity.Epic, "Aftermath: Give your opponent a Mine. Unless they play it, it explodes for 10 damage next turn.")
+            {
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathEnemy, "Aftermath: Give your opponent a Mine. Unless they play it, it explodes for 10 damage next turn.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[enemy].hand.AddCard(new OgrimmarJuggernaut.Mine());
+                    gameHandler.players[enemy].aftermathMessages.Add(
+                         $"{gameHandler.players[curPlayer].name}'s Ogrimmar Juggernaut added a Mine to your hand.");
+                    return Task.CompletedTask;
+                }
+            }
+
+            [Token]
+            public class Mine : Spell
+            {
+                public Mine() : 
+                    base("Mine", 6, "If this is unplayed at the end of your turn, it explodes and deals 10 damage to your Mech.")
+                {
+                    this.effects.Add(new EndOfTurn());
+                }
+                private class EndOfTurn : Effect
+                {
+                    public EndOfTurn() : base(EffectType.EndOfTurnInHand) { }
+
+                    public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                    {
+                        var info = extraInf as ExtraEffectInfo.CardInHandInfo;
+
+                        gameHandler.players[curPlayer].creatureData.health = Math.Max(1, gameHandler.players[curPlayer].creatureData.health - 10);
+                        gameHandler.players[curPlayer].hand.RemoveCard(info.handPos);
+
+                        //add end of turn public message
+                        //$"A Mine explodes in {gameHandler.players[curPlayer].name}'s hand, dealing 10 damage to it."
+
+                        return Task.CompletedTask;
+                    }
+                }
+            }
+        }
 
         [Upgrade]
         public class PanicButton : Upgrade
@@ -401,6 +521,48 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO: PulsefireUltracannon
+        [Upgrade]
+        public class PulsefireUltracannon : Upgrade
+        {
+            public PulsefireUltracannon() :
+                base(UpgradeSet.WarMachines, "Pulsefire Ultracannon", 10, 10, 7, Rarity.Legendary, "Permanent Start of Combat: Deal 2 damage to the enemy Mech. Improved by 2 after you buy an Upgrade.")
+            {
+                this.effects.Add(new PulsefireEffect());
+            }
+            private class PulsefireEffect : Effect
+            {
+                private int dmg = 2;
+
+                public PulsefireEffect() : base(new EffectType[] { EffectType.StartOfCombat, EffectType.OnBuyingAMech, EffectType.AftermathMe }, "Permanent Start of Combat: Deal 2 damage to the enemy Mech. Improved by 2 after you buy an Upgrade.", EffectDisplayMode.Public) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (extraInf.calledEffect == EffectType.OnBuyingAMech)
+                    {
+                        this.dmg += 2;
+                        this.effectText = $"Permanent Start of Combat: Deal {this.dmg} damage to the enemy Mech. Improved by 2 after you buy an Upgrade.";
+                    }
+                    else if (extraInf.calledEffect == EffectType.StartOfCombat)
+                    {
+                        var info = extraInf as ExtraEffectInfo.StartOfCombatInfo;
+
+                        var dmgInfo = new ExtraEffectInfo.DamageInfo(extraInf.ctx, this.dmg, $"{gameHandler.players[curPlayer].name}'s Pulsefire Ultracannon deals {this.dmg} damage, ");
+                        await gameHandler.players[enemy].TakeDamage(gameHandler, curPlayer, enemy, dmgInfo);
+                        info.output.Add(dmgInfo.output);
+                    }
+                    else if (extraInf.calledEffect == EffectType.AftermathMe)
+                    {
+                        gameHandler.players[curPlayer].nextRoundEffects.Add(new PulsefireEffect { dmg = this.dmg });
+                    }
+                }
+
+                public override Effect Copy()
+                {
+                    PulsefireEffect ret = (PulsefireEffect)base.Copy();
+                    ret.dmg = this.dmg;
+                    return ret;
+                }
+            }
+        }
     }
 }

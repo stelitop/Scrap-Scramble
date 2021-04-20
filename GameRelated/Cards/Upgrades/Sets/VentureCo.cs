@@ -56,7 +56,33 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO: Add Silicon Grenade Belt        
+        [Upgrade]
+        public class SiliconGrenadeBelt : Upgrade
+        {
+            public SiliconGrenadeBelt() :
+                base(UpgradeSet.VentureCo, "Silicon Grenade Belt", 3, 4, 2, Rarity.Common, "Start of Combat: Deal 1 damage to the enemy Mech, twice.")
+            {
+                this.effects.Add(new StartOfCombat());
+            }
+
+            private class StartOfCombat : Effect
+            {
+                public StartOfCombat() : base(EffectType.StartOfCombat, "Start of Combat: Deal 1 damage to the enemy Mech, twice.", EffectDisplayMode.Public) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var info = extraInf as ExtraEffectInfo.StartOfCombatInfo;
+
+                    var dmgInfo = new ExtraEffectInfo.DamageInfo(extraInf.ctx, 1, $"{gameHandler.players[curPlayer].name}'s Silicon Grenade Belt deals 1 damage, ");
+                    await gameHandler.players[enemy].TakeDamage(gameHandler, curPlayer, enemy, dmgInfo);
+                    info.output.Add(dmgInfo.output);
+
+                    dmgInfo = new ExtraEffectInfo.DamageInfo(extraInf.ctx, 1, $"{gameHandler.players[curPlayer].name}'s Silicon Grenade Belt deals 1 damage, ");
+                    await gameHandler.players[enemy].TakeDamage(gameHandler, curPlayer, enemy, dmgInfo);
+                    info.output.Add(dmgInfo.output);
+                }
+            }
+        }
 
         [Upgrade]
         public class VentureCoPauldrons : Upgrade
@@ -239,7 +265,31 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO: Illegal Thermnodynamo
+        [Upgrade]
+        public class IllegalThermodynamo : Upgrade
+        {
+            public IllegalThermodynamo() :
+                base(UpgradeSet.VentureCo, "Illegal Thermodynamo", 3, 2, 2, Rarity.Rare, "After this is Frozen, gain +3/+3.")
+            {
+                this.effects.Add(new OnBeingFrozen());
+            }
+            private class OnBeingFrozen : Effect
+            {
+                public OnBeingFrozen() : base(EffectType.OnBeingFrozen) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (caller is Upgrade u)
+                    {
+                        u.creatureData.attack += 3;
+                        u.creatureData.health += 3;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            }
+            
+        }
 
         [Upgrade]
         public class TreasureMiner : Upgrade
@@ -494,6 +544,36 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
     
-        //TODO: Add Neato Magnet Magneto
+        [Upgrade]
+        public class NeatoMagnetMagneto : Upgrade
+        {
+            public NeatoMagnetMagneto() :
+                base(UpgradeSet.VentureCo, "Neato Magnet Magneto", 9, 8, 6, Rarity.Legendary, "Spellburst: If the spell is a Spare Part other than Mana Capsule, apply its effect to all Upgrades in your shop.")
+            {
+                this.effects.Add(new Spellburst());
+            }
+            private class Spellburst : Effect
+            {
+                public Spellburst() : base() { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (caller is Spell s)
+                    {
+                        if (s.rarity == SpellRarity.Spare_Part && s.name != "Mana Capsule")
+                        {
+                            List<int> upgrades = gameHandler.players[curPlayer].shop.GetAllUpgradeIndexes();
+
+                            for (int i = 0; i < upgrades.Count(); i++)
+                            {
+                                s.CastOnUpgradeInShop(upgrades[i], gameHandler, curPlayer, enemy, extraInf.ctx);
+                            }
+                        }
+                    }                    
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
     }
 }

@@ -255,6 +255,27 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class BumperCar : Upgrade
+        {
+            public BumperCar() :
+                base(UpgradeSet.IronmoonFaire, "Bumper Car", 3, 5, 1, Rarity.Rare, "Rush x2. After this takes damage, destroy it.")
+            {
+                this.effects.Add(new OnTakingDamage());
+                this.creatureData.staticKeywords[StaticKeyword.Rush] = 2;
+            }
+            private class OnTakingDamage : Effect
+            {
+                public OnTakingDamage() : base(EffectType.AfterThisTakesDamage, "After this takes damage, destroy it.", EffectDisplayMode.Public) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].destroyed = true;
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
         public class SpringloadedJester : Upgrade
         {
             public SpringloadedJester() :
@@ -278,7 +299,51 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO : Add Fortune Wheel after I've implemented spells being cast on upgrades
+        [Upgrade]
+        public class FortuneWheel : Upgrade
+        {
+            public FortuneWheel() :
+                base(UpgradeSet.IronmoonFaire, "Fortune Wheel", 3, 3, 3, Rarity.Epic, "Aftermath: Cast 3 random Spare Parts with random targets.")
+            {
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Cast 3 random Spare Parts on random Upgrades in your shop.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    string aftermathMsg = "Your Fortune Wheel casted ";
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        Spell sparePart = (Spell)gameHandler.players[curPlayer].pool.spareparts[GameHandler.randomGenerator.Next(0, gameHandler.pool.spareparts.Count())].DeepCopy();
+
+                        if (i == 0) aftermathMsg += $"{sparePart.name}";
+                        else if (i == 1) aftermathMsg += $", {sparePart.name}";
+                        else if (i == 2) aftermathMsg += $" and {sparePart.name}";
+
+                        if (sparePart.name == "Mana Capsule")
+                        {
+                            //await sparePart.OnPlay(gameHandler, curPlayer, enemy);
+                            gameHandler.players[curPlayer].curMana += 2;
+                        }
+                        else
+                        {
+                            int index = gameHandler.players[curPlayer].shop.GetRandomUpgradeIndex();
+                            sparePart.CastOnUpgradeInShop(index, gameHandler, curPlayer, enemy, extraInf.ctx);
+                            aftermathMsg += $"({gameHandler.players[curPlayer].shop.At(index).name})";
+                        }
+                    }
+
+                    aftermathMsg += " on random Upgrades in your shop.";
+
+                    gameHandler.players[curPlayer].aftermathMessages.Add(aftermathMsg);
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
 
         [Upgrade]
         public class Highroller : Upgrade

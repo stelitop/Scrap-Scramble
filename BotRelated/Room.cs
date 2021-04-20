@@ -88,6 +88,7 @@ namespace Scrap_Scramble_Final_Version.BotRelated
                 BotHandler.SetUserState(id, UserState.InGame);
             }            
 
+            //calls the GameHandler's Method to start a game
             await this.gameHandler.StartNewGame(this, ctx);
 
             return true;
@@ -98,10 +99,10 @@ namespace Scrap_Scramble_Final_Version.BotRelated
             Console.WriteLine("roomnextround1");
             await this.gameHandler.NextRound(this, ctx);
             Console.WriteLine("roomnextround2");
-            foreach (var player in this.gameHandler.players)
-            {
-                await player.Value.SendNewPlayerUI(ctx, this.gameHandler, player.Key);
-            }
+            //foreach (var player in this.gameHandler.players)
+            //{
+            //    await player.Value.SendNewPlayerUI(ctx, this.gameHandler, player.Key);
+            //}
             Console.WriteLine("roomnextround3");
 
             return true;
