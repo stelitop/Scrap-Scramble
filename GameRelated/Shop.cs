@@ -10,11 +10,15 @@ namespace Scrap_Scramble_Final_Version.GameRelated
     public class Shop
     {
         private List<Upgrade> options;
+
+        public List<Upgrade> specials;
+
         public int LastIndex { get { return options.Count(); } }
 
         public Shop()
         {
             this.options = new List<Upgrade>();
+            this.specials = new List<Upgrade>();
         }
 
         public int AddUpgrade(Upgrade m)
@@ -204,6 +208,18 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             }
             retList.Add(ret);
             return retList;
+        }
+
+        public string GetSpecialsInfo(GameHandler gameHandler, ulong player)
+        {
+            string ret = string.Empty;
+
+            for (int i=0; i<this.specials.Count(); i++)
+            {
+                ret += $"- {this.specials[i].GetInfo(gameHandler, player)}\n";
+            }
+
+            return ret;
         }
     }
 }

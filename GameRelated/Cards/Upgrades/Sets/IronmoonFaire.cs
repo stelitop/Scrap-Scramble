@@ -134,6 +134,56 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                 }
             }
         }
+
+        [Upgrade]
+        public class SwindlersCoin : Upgrade
+        {
+            public SwindlersCoin() : 
+                base(UpgradeSet.IronmoonFaire, "Swindler's Coin", 1, 0, 1, Rarity.Common, "Binary, Tiebreaker. Overload: (1)")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Binary] = 1;
+                this.creatureData.staticKeywords[StaticKeyword.Tiebreaker] = 1;
+                this.creatureData.staticKeywords[StaticKeyword.Overload] = 1;
+            }
+        }
+
+        [Upgrade]
+        public class Highroller : Upgrade
+        {
+            public Highroller() :
+                base(UpgradeSet.IronmoonFaire, "Highroller", 4, 3, 3, Rarity.Common, "Aftermath: Reduce the cost of a random Upgrade in your shop by (4).")
+            {
+                this.effects.Add(new Aftermath());
+            }
+
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Reduce the cost of a random Upgrade in your shop by (4).", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (gameHandler.players[curPlayer].shop.OptionsCount() == 0) return Task.CompletedTask;
+
+                    Upgrade m = gameHandler.players[curPlayer].shop.GetRandomUpgrade();
+                    m.Cost -= 4;
+
+                    gameHandler.players[curPlayer].aftermathMessages.Add($"Your Highroller reduces the cost of {m.name} in your shop by (4).");
+
+                    return Task.CompletedTask;
+                }
+            }
+        }        
+
+        [Upgrade]
+        public class DjinniAccelerator : Upgrade
+        {
+            public DjinniAccelerator() :
+                base(UpgradeSet.IronmoonFaire, "Djinni Accelerator", 5, 6, 6, Rarity.Common, "Magnetic, Taunt x2")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Magnetic] = 1;
+                this.creatureData.staticKeywords[StaticKeyword.Taunt] = 2;
+            }
+        }
     
         [Upgrade]
         public class PeekABot : Upgrade
@@ -231,28 +281,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             {
                 return base.GetInfo(gameHandler, player) + $" *({CardsFilter.FilterList<Card>(gameHandler.players[player].playHistory, x => x.name == "Robo-Rabbit").Count})*";
             }
-        }
-    
-        [Upgrade]
-        public class TrickRoomster : Upgrade
-        {
-            public TrickRoomster() : 
-                base(UpgradeSet.IronmoonFaire, "Trick Roomster", 4, 1, 1, Rarity.Rare, "The Mech with the lower Attack Priority goes first instead.")
-            {
-                this.effects.Add(new OnPlay());
-            }
-
-            private class OnPlay : Effect
-            {
-                public OnPlay() : base(EffectType.OnPlay, "The Mech with the lower Attack Priority goes first instead.", EffectDisplayMode.Public) { }
-
-                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
-                {
-                    gameHandler.players[curPlayer].specificEffects.invertAttackPriority = true;
-                    return Task.CompletedTask;
-                }
-            }
-        }
+        }           
 
         [Upgrade]
         public class BumperCar : Upgrade
@@ -274,6 +303,118 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                 }
             }
         }
+
+        [Upgrade]
+        public class LightningWeasel : Upgrade
+        {
+            public LightningWeasel() :
+                base(UpgradeSet.IronmoonFaire, "Lightning Weasel", 2, 1, 1, Rarity.Rare, "Aftermath: Replace the highest-Cost Upgrade in your opponent's shop with a Lightning Weasel.")
+            {
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathEnemy, "Aftermath: Replace the highest-Cost Upgrade in your opponent's shop with a Lightning Weasel.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (curPlayer == enemy) return Task.CompletedTask;
+                    if (gameHandler.players[enemy].shop.OptionsCount() == 0) return Task.CompletedTask;
+
+                    List<int> highestCosts = new List<int>();
+                    List<int> enemyIndexes = gameHandler.players[enemy].shop.GetAllUpgradeIndexes();
+
+                    int maxCost = -1;
+                    for (int i = 0; i < enemyIndexes.Count; i++)
+                    {
+                        if (maxCost < gameHandler.players[enemy].shop.At(enemyIndexes[i]).Cost)
+                            maxCost = gameHandler.players[enemy].shop.At(enemyIndexes[i]).Cost;
+                    }
+
+                    for (int i = 0; i < enemyIndexes.Count(); i++)
+                    {
+                        if (gameHandler.players[enemy].shop.At(enemyIndexes[i]).Cost == maxCost) highestCosts.Add(i);
+                    }
+
+                    int pos = GameHandler.randomGenerator.Next(0, highestCosts.Count());
+
+                    string oldName = gameHandler.players[enemy].shop.At(highestCosts[pos]).name;
+                    gameHandler.players[enemy].shop.TransformUpgrade(highestCosts[pos], new LightningWeasel());
+
+                    gameHandler.players[enemy].aftermathMessages.Add(
+                        $"{gameHandler.players[curPlayer].name}'s Lightning Weasel replaced your highest-cost Upgrade ({oldName}) with a Lightning Weasel.");
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class RaffleBox : Upgrade
+        {
+            public RaffleBox() :
+                base(UpgradeSet.IronmoonFaire, "Raffle Box", 4, 3, 4, Rarity.Rare, "Aftermath: Add an Ironmoon Ticket to your hand. It gives you +1/+1 and 1 Mana for each Ticket you're holding.")
+            {
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Add an Ironmoon Ticket to your hand.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].hand.AddCard(new IronmoonTicket());
+                    gameHandler.players[curPlayer].aftermathMessages.Add(
+                        "Your Raffle Box adds an Ironmoon Ticket to your hand.");
+
+                    return Task.CompletedTask;
+                }
+            }
+
+        }
+
+        //[Upgrade]
+        //public class Gamblebot : Upgrade
+        //{
+        //    public Gamblebot() :
+        //        base(UpgradeSet.IronmoonFaire, "Gamblebot", 3, 2, 3, Rarity.Rare, "Aftermath: Give the winner of your last combat +2 Mana this turn only.")
+        //    {
+        //        this.effects.Add(new Aftermath());
+        //    }
+        //    private class Aftermath : Effect
+        //    {
+        //        public Aftermath() : base(new EffectType[] { EffectType.AftermathMe, EffectType.AftermathEnemy }, "Aftermath: Give the winner of your last combat +2 Coins.", EffectDisplayMode.Private) { }
+
+        //        public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+        //        {
+        //            if (extraInf.calledEffect == EffectType.AftermathMe)
+        //            {
+        //                if (gameHandler.pairsHandler.playerResults[gameHandler.pairsHandler.playerResults.Count()-2][curPlayer] == FightResult.WIN)
+        //                {
+        //                    gameHandler.players[curPlayer].curMana += 2;
+        //                    gameHandler.players[curPlayer].aftermathMessages.Add(
+        //                        "Your Gamblebot gives you +2 Mana, because you won last combat.");
+        //                }
+        //                else
+        //                {
+        //                    gameHandler.players[curPlayer].aftermathMessages.Add(
+        //                        "Your Gamblebot fails to trigger, because you lost last combat.");
+        //                }
+        //            }
+        //            else if (extraInf.calledEffect == EffectType.AftermathEnemy)
+        //            {                        
+        //                if (gameHandler.pairsHandler.playerResults[gameHandler.pairsHandler.playerResults.Count() - 2][enemy] == FightResult.WIN)
+        //                {
+        //                    gameHandler.players[enemy].curMana += 2;
+        //                    gameHandler.players[enemy].aftermathMessages.Add(
+        //                        $"{gameHandler.players[curPlayer].name}'s Gamblebot gives you +2 Mana, because you won last combat.");
+        //                }
+        //            }
+
+        //            return Task.CompletedTask;
+        //        }
+        //    }
+        //}
 
         [Upgrade]
         public class SpringloadedJester : Upgrade
@@ -346,27 +487,21 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
-        public class Highroller : Upgrade
+        public class TrickRoomster : Upgrade
         {
-            public Highroller() :
-                base(UpgradeSet.IronmoonFaire, "Highroller", 4, 3, 3, Rarity.Epic, "Aftermath: Reduce the cost of a random Upgrade in your shop by (4).")
+            public TrickRoomster() :
+                base(UpgradeSet.IronmoonFaire, "Trick Roomster", 4, 1, 1, Rarity.Epic, "The Mech with the lower Attack Priority goes first instead.")
             {
-                this.effects.Add(new Aftermath());
+                this.effects.Add(new OnPlay());
             }
 
-            private class Aftermath : Effect
+            private class OnPlay : Effect
             {
-                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Reduce the cost of a random Upgrade in your shop by (4).", EffectDisplayMode.Private) { }
+                public OnPlay() : base(EffectType.OnPlay, "The Mech with the lower Attack Priority goes first instead.", EffectDisplayMode.Public) { }
 
                 public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
                 {
-                    if (gameHandler.players[curPlayer].shop.OptionsCount() == 0) return Task.CompletedTask;
-
-                    Upgrade m = gameHandler.players[curPlayer].shop.GetRandomUpgrade();
-                    m.Cost -= 4;                    
-
-                    gameHandler.players[curPlayer].aftermathMessages.Add($"Your Highroller reduces the cost of {m.name} in your shop by (4).");
-
+                    gameHandler.players[curPlayer].specificEffects.invertAttackPriority = true;
                     return Task.CompletedTask;
                 }
             }
@@ -493,55 +628,58 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         public class SilasIronmoon : Upgrade
         {
             public SilasIronmoon() :
-                base(UpgradeSet.IronmoonFaire, "Silas Ironmoon", 7, 4, 4, Rarity.Legendary, "Permanent Aftermath: Add a Ticket to your hand. It gives you +1/+1 and 1 Mana for each Ticket you're holding.")
+                base(UpgradeSet.IronmoonFaire, "Silas Ironmoon", 7, 4, 4, Rarity.Legendary, "Permanent Aftermath: Add an Ironmoon Ticket to your hand. It gives you +1/+1 and 1 Mana for each Ticket you're holding.")
             {
                 this.effects.Add(new PermanentAftermath());
             }
 
             private class PermanentAftermath : Effect
             {
-                public PermanentAftermath() : base(EffectType.AftermathMe, "Permanent Aftermath: Add a Ticket to your hand. It gives you +1/+1 and 1 Mana for each Ticket you're holding.", EffectDisplayMode.Private) { }
+                public PermanentAftermath() : base(EffectType.AftermathMe, "Permanent Aftermath: Add an Ironmoon Ticket to your hand.", EffectDisplayMode.Private) { }
 
                 public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
                 {
                     gameHandler.players[curPlayer].hand.AddCard(new IronmoonTicket());
                     gameHandler.players[curPlayer].nextRoundEffects.Add(new PermanentAftermath());
 
+                    gameHandler.players[curPlayer].aftermathMessages.Add(
+                        "Your Silas Ironmoon adds an Ironmoon Ticket to your hand.");
+
+                    return Task.CompletedTask;
+                }
+            }            
+        }
+
+        [Token]
+        public class IronmoonTicket : Spell
+        {
+            public IronmoonTicket() :
+                base("Ironmoon Ticket", 0, "Gain +1/+1 and 1 Mana for each Ironmoon Ticket you're holding.")
+            {
+                this.effects.Add(new OnPlay());
+            }
+
+            private class OnPlay : Effect
+            {
+                public OnPlay() : base(EffectType.OnPlay) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    int amountOfTickets = CardsFilter.FilterList<Card>(gameHandler.players[curPlayer].hand.GetAllCards(), x => x.name == "Ironmoon Ticket").Count();
+
+                    gameHandler.players[curPlayer].creatureData.attack += amountOfTickets + 1;
+                    gameHandler.players[curPlayer].creatureData.health += amountOfTickets + 1;
+                    gameHandler.players[curPlayer].curMana += amountOfTickets + 1;
+
                     return Task.CompletedTask;
                 }
             }
 
-            [Token]
-            public class IronmoonTicket : Spell
+            public override string GetInfo(GameHandler gameHandler, ulong player)
             {
-                public IronmoonTicket() :
-                    base("Ironmoon Ticket", 0, "Gain +1/+1 and 1 Mana for each Ironmoon Ticket you're holding.")
-                {
-                    this.effects.Add(new OnPlay());
-                }
+                List<Card> amountOfTickets = CardsFilter.FilterList<Card>(gameHandler.players[player].hand.GetAllCards(), x => x.name == "Ironmoon Ticket");
 
-                private class OnPlay : Effect
-                {
-                    public OnPlay() : base(EffectType.OnPlay) { }
-
-                    public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
-                    {
-                        int amountOfTickets = CardsFilter.FilterList<Card>(gameHandler.players[curPlayer].hand.GetAllCards(), x => x.name == "Ironmoon Ticket").Count();
-
-                        gameHandler.players[curPlayer].creatureData.attack += amountOfTickets + 1;
-                        gameHandler.players[curPlayer].creatureData.health += amountOfTickets + 1;
-                        gameHandler.players[curPlayer].curMana += amountOfTickets + 1;
-
-                        return Task.CompletedTask;
-                    }
-                }
-
-                public override string GetInfo(GameHandler gameHandler, ulong player)
-                {
-                    List<Card> amountOfTickets = CardsFilter.FilterList<Card>(gameHandler.players[player].hand.GetAllCards(), x => x.name == "Ironmoon Ticket");
-
-                    return base.GetInfo(gameHandler, player) + $" *({amountOfTickets.Count()})*";
-                }
+                return base.GetInfo(gameHandler, player) + $" *({amountOfTickets.Count()})*";
             }
         }
     }

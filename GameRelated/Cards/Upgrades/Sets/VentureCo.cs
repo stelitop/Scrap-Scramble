@@ -231,7 +231,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         public class CopyShredder : Upgrade
         {
             public CopyShredder() :
-                base(UpgradeSet.VentureCo, "Copy Shreed", 3, 2, 4, Rarity.Rare, "Start of Combat: Gain +1/+1 for each duplicate Upgrade your opponent bought this round.")
+                base(UpgradeSet.VentureCo, "Copy Shredder", 3, 2, 4, Rarity.Rare, "Start of Combat: Gain +1/+1 for each duplicate Upgrade your opponent bought this round.")
             {
                 this.effects.Add(new StartOfCombat());
             }

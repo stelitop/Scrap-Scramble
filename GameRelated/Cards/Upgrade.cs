@@ -23,7 +23,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards
             this.upgradeSet = UpgradeSet.Classic;
         }
 
-        public Upgrade(UpgradeSet set, string name, int cost, int attack, int health, Rarity rarity, string cardText)        
+        public Upgrade(UpgradeSet set, string name, int cost, int attack, int health, Rarity rarity, string cardText = "")        
         {
             this.upgradeSet = set;
             this.name = name;

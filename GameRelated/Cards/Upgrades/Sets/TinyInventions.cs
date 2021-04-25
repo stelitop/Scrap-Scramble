@@ -328,6 +328,58 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class OffbrandShoe : Upgrade
+        {
+            public OffbrandShoe() :
+                base(UpgradeSet.TinyInventions, "Offbrand Shoe", 1, 0, 6, Rarity.Rare, "Aftermath: Deal 6 damage to your Mech.")
+            {
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Deal 6 damage to your Mech.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.health = Math.Max(1, gameHandler.players[curPlayer].creatureData.health - 6);
+
+                    gameHandler.players[curPlayer].aftermathMessages.Add(
+                        "Your Offbrand Shoe deals 6 damage to your Mech.");
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class ElectricBoogaloo : Upgrade
+        {
+            public ElectricBoogaloo() :
+                base(UpgradeSet.TinyInventions, "Electric Boogaloo", 3, 1, 4, Rarity.Rare, "Echo. Aftermath: Give a random Upgrade in your shop +4 Attack.")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Echo] = 1;
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathMe, "Echo. Aftermath: Give a random Upgrade in your shop +4 Attack.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    if (gameHandler.players[curPlayer].shop.OptionsCount() == 0) return Task.CompletedTask;
+
+                    Upgrade m = gameHandler.players[curPlayer].shop.GetRandomUpgrade();
+                    m.creatureData.attack += 4;
+
+                    gameHandler.players[curPlayer].aftermathMessages.Add(
+                        $"Your Electric Boogaloo gave the {m.name} in your shop +4 Attack.");
+
+                    return Task.CompletedTask;
+                }
+            }            
+        }
+
+        [Upgrade]
         public class FreezerHeater : Upgrade
         {
             public FreezerHeater() :
@@ -358,7 +410,184 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
 
         }
+
+        [Upgrade]
+        public class TC130MentalDislocator : Upgrade
+        {
+            public TC130MentalDislocator() :
+                base(UpgradeSet.TinyInventions, "TC-130 Mental Dislocator", 3, 3, 3, Rarity.Epic, "Start of Combat: Swap the enemy Mech's Attack and Health.")
+            {
+                this.effects.Add(new StartOfCombat());
+            }
+            private class StartOfCombat : Effect
+            {
+                public StartOfCombat() : base(EffectType.StartOfCombat, "Start of Combat: Swap the enemy Mech's Attack and Health.", EffectDisplayMode.Public) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var info = extraInf as ExtraEffectInfo.StartOfCombatInfo;
+
+                    int mid = gameHandler.players[enemy].creatureData.attack;
+                    gameHandler.players[enemy].creatureData.attack = gameHandler.players[enemy].creatureData.health;
+                    gameHandler.players[enemy].creatureData.health = mid;
+
+                    info.output.Add($"{gameHandler.players[curPlayer].name}'s TC-130 Mental Dislocator swaps {gameHandler.players[enemy].name}'s Attack and Health, leaving it as a {gameHandler.players[enemy].creatureData.Stats()}.");
+                      
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class PiggyBank : Upgrade
+        {
+            public PiggyBank() :
+                base(UpgradeSet.TinyInventions, "Piggy Bank", 2, 2, 2, Rarity.Epic, "Battlecry: Spend your remaining Mana. Aftermath: Gain that much Mana this round.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {                                       
+                    gameHandler.players[curPlayer].effects.Add(new Aftermath(gameHandler.players[curPlayer].curMana));
+                    gameHandler.players[curPlayer].curMana = 0;
+
+                    return Task.CompletedTask;
+                }
+                private class Aftermath : Effect
+                {
+                    private int _mana;
+
+                    public Aftermath() : base(EffectType.Null) { }
+                    public Aftermath(int mana) : base(EffectType.AftermathMe, $"Aftermath: Gain {mana} Mana this turn only.", EffectDisplayMode.Private)
+                    {
+                        this._mana = mana;
+                    }
+
+                    public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                    {
+                        gameHandler.players[curPlayer].curMana += _mana;
+
+                        gameHandler.players[curPlayer].aftermathMessages.Add(
+                            $"Your Piggy Bank gives you {_mana} Mana this turn only.");
+
+                        return Task.CompletedTask;
+                    }
+
+                    public override Effect Copy()
+                    {
+                        var ret = (Aftermath)base.Copy();
+                        ret._mana = this._mana;
+                        return ret;
+                    }
+                }
+            }
+        }
+
+        [Upgrade]
+        public class JewelHolder : Upgrade
+        {
+            public JewelHolder() :
+                base(UpgradeSet.TinyInventions, "Jewel Holder", 3, 1, 2, Rarity.Epic, "Battlecry: Gain +1/+1 for each other Upgrade of different Rarity bought this turn.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            { 
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    int c=0, r=0, e=0, l=0;
+
+                    foreach (var u in gameHandler.players[curPlayer].buyHistory.Last())
+                    {
+                        switch (u.rarity)
+                        {
+                            case Rarity.Common:
+                                c = 1;
+                                break;
+                            case Rarity.Rare:
+                                r = 1;
+                                break;
+                            case Rarity.Epic:
+                                e = 1;
+                                break;
+                            case Rarity.Legendary:
+                                l = 1;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    gameHandler.players[curPlayer].creatureData.attack += c + r + e + l;
+                    gameHandler.players[curPlayer].creatureData.health += c + r + e + l;
+
+                    return Task.CompletedTask;
+                }
+            }
+
+            public override string GetInfo(GameHandler gameHandler, ulong player)
+            {
+                string ret = base.GetInfo(gameHandler, player) + " ";
+
+                int c = 0, r = 0, e = 0, l = 0, any = 0;
+
+                foreach (var u in gameHandler.players[player].buyHistory.Last())
+                {
+                    switch (u.rarity)
+                    {
+                        case Rarity.Common:
+                            c = 1;
+                            any = 1;
+                            break;
+                        case Rarity.Rare:
+                            r = 1;
+                            any = 1;
+                            break;
+                        case Rarity.Epic:
+                            e = 1;
+                            any = 1;
+                            break;
+                        case Rarity.Legendary:
+                            l = 1;
+                            any = 1;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                if (any == 0)
+                {
+                    ret += "*(none)*";
+                }
+                else
+                {
+                    if (c + r + e + l == 4) return ret + " *(All)*";
+
+                    ret += "*(";
+
+                    if (c == 1) ret += "Common, ";
+                    if (r == 1) ret += "Rare, ";
+                    if (e == 1) ret += "Epic, ";
+                    if (l == 1) ret += "Legendary, ";
+
+                    ret = ret.Substring(0, ret.Length-2);
+
+                    ret += ")*";
+                }
+
+                return ret;
+            }
+        }
     
+        //TODO: Replace this with "After you buy an Upgrade that costs (3) or less, add a random Upgrade that costs (3) or less to your shop."
+        //Or replace it with something elses        
         [Upgrade]
         public class NanoDuplicatorV10 : Upgrade
         {

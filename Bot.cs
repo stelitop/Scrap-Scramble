@@ -43,9 +43,9 @@ namespace Scrap_Scramble_Final_Version
                 Token = configJson.Token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
-                MinimumLogLevel = LogLevel.Debug,
+                MinimumLogLevel = LogLevel.Debug,                
                 //UseInternalLoggingHandler = true
-            };
+            };            
 
             Client = new DiscordClient(config);
 

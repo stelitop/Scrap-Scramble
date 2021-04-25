@@ -183,6 +183,7 @@
     <Compile Include="GameRelated\Cards\Upgrades\Sets\JunkAndTreasures.cs" />
     <Compile Include="GameRelated\Cards\Upgrades\Sets\MonstersReanimated.cs" />
     <Compile Include="GameRelated\Cards\Upgrades\Sets\ScholomanceAcademy.cs" />
+    <Compile Include="GameRelated\Cards\Upgrades\Sets\TheRustedLegion.cs" />
     <Compile Include="GameRelated\Cards\Upgrades\Sets\TinyInventions.cs" />
     <Compile Include="GameRelated\Cards\Upgrades\Sets\VentureCo.cs" />
     <Compile Include="GameRelated\Cards\Upgrades\Sets\WarMachines.cs" />

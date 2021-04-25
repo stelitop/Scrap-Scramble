@@ -141,6 +141,11 @@ namespace Scrap_Scramble_Final_Version.GameRelated
             embed.AddField("[Upgrades]", this.PrintInfoUpgrades(gameHandler), true);
             embed.AddField("[Effects]", this.PrintInfoEffects(gameHandler));
 
+            if (this.shop.specials.Count() > 0)
+            {
+                embed.AddField("[Special]", this.shop.GetSpecialsInfo(gameHandler, curPlayer));
+            }
+
             var shop = this.shop.GetShopInfo(gameHandler, curPlayer); 
             for (int i = 0; i < shop.Count; i++)
             {
@@ -369,7 +374,6 @@ namespace Scrap_Scramble_Final_Version.GameRelated
                 foreach (var kw in this.creatureData.staticKeywords)
                 {
                     if (kw.Value == 0) continue;
-                    if (kw.Key == StaticKeyword.Overload) continue;
                     ret += $"{kw.Key}: {kw.Value}\n";
                 }
             }

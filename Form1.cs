@@ -42,39 +42,9 @@ namespace Scrap_Scramble_Final_Version
             BotHandler.DiscordBot.RunAsync();            
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {            
-            //BotHandler.setHandler.Sets
-            ListBoxTesting.Items.Clear();
-
-            CardPool pool = new CardPool();
-            pool.FillGenericCardPool();
-            pool.FillSpareParts();
-            pool.FillTokens();
-            ListBoxTesting.Items.Add("Upgrades: " + pool.upgrades.Count());
-            ListBoxTesting.Items.Add("Tokens: " + pool.tokens.Count());
-            ListBoxTesting.Items.Add("Spare Parts: " + pool.spareparts.Count());
-
-            var y = new ArmOfExotron();            
-
-            GameHandler gameHandler = new GameHandler();
-
-            gameHandler.AddPlayer(0, "FrogChamp");
-
-            //y.effects[0].Call(y, gameHandler, 0, 0);
-
-            //await x.AttachMech(new OrbitalMechanosphere(), gameHandler, 0, 0);
-            //await x.AttachMech(new GiantPhoton(), gameHandler, 0, 0);            
-            await gameHandler.players[0].AttachMech(new ThreeModuleHydra(), gameHandler, 0, 0, null);
             
-
-            await Effect.CallEffects(gameHandler.players[0].effects, Effect.EffectType.AftermathMe, y, gameHandler, 0, 0, null);
-
-            ListBoxTesting.Items.Add(gameHandler.players[0].hand.OptionsCount());
-
-            ListBoxTesting.Items.Add(gameHandler.players[0].PrintInfoGeneral(gameHandler, 0));
-            ListBoxTesting.Items.Add(gameHandler.players[0].PrintInfoKeywords(gameHandler));
-            //ListBoxLogging.Items.Add(x.PrintInfoUpgrades(gameHandler));
         }
 
         private void ButtonGetUserStates_Click(object sender, EventArgs e)

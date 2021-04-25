@@ -54,13 +54,14 @@ namespace Scrap_Scramble_Final_Version
             this.ListBoxLogging.FormattingEnabled = true;
             this.ListBoxLogging.Location = new System.Drawing.Point(516, 77);
             this.ListBoxLogging.Name = "ListBoxLogging";
-            this.ListBoxLogging.Size = new System.Drawing.Size(480, 225);
+            this.ListBoxLogging.ScrollAlwaysVisible = true;
+            this.ListBoxLogging.Size = new System.Drawing.Size(756, 459);
             this.ListBoxLogging.TabIndex = 1;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(764, 38);
+            this.label1.Location = new System.Drawing.Point(881, 38);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(45, 13);
             this.label1.TabIndex = 2;
@@ -117,7 +118,7 @@ namespace Scrap_Scramble_Final_Version
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1044, 582);
+            this.ClientSize = new System.Drawing.Size(1300, 582);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.ButtonGetSetBreakdown);
             this.Controls.Add(this.ButtonGetUserStates);

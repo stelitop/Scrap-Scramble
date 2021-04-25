@@ -101,13 +101,13 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         public class PlatinumParagon : Upgrade
         {
             public PlatinumParagon() :
-                base(UpgradeSet.JunkAndTreasures, "Platinum Paragon", 5, 4, 5, Rarity.Common, "Aftermath: Add 1 random Legendary Upgrades to your shop.")
+                base(UpgradeSet.JunkAndTreasures, "Platinum Paragon", 5, 4, 5, Rarity.Common, "Aftermath: Add 1 random Legendary Upgrade to your shop.")
             {
                 this.effects.Add(new Aftermath());
             }
             private class Aftermath : Effect
             {
-                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Add 1 random Legendary Upgrades to your shop.", EffectDisplayMode.Private) { }
+                public Aftermath() : base(EffectType.AftermathMe, "Aftermath: Add 1 random Legendary Upgrade to your shop.", EffectDisplayMode.Private) { }
                 public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
                 {
                     List<Upgrade> list = CardsFilter.FilterList<Upgrade>(gameHandler.players[curPlayer].pool.upgrades, x => x.rarity == Rarity.Legendary && x.Cost <= gameHandler.players[curPlayer].maxMana - 5);
@@ -119,7 +119,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                     }
 
                     gameHandler.players[curPlayer].aftermathMessages.Add(
-                        "Your Platinum Paragon adds 1 random Legendary Upgrades to your shop.");
+                        "Your Platinum Paragon adds 1 random Legendary Upgrade to your shop.");
 
                     return Task.CompletedTask;
                 }

@@ -126,6 +126,87 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class PrismaticBarrier : Upgrade
+        {
+            public PrismaticBarrier() :
+                base(UpgradeSet.ScholomanceAcademy, "Prismatic Barrier", 8, 5, 8, Rarity.Common, "Start of Combat: Gain +10 Shields.")
+            {
+                this.effects.Add(new StartOfCombat());
+            }
+            private class StartOfCombat : Effect
+            {
+                public StartOfCombat() : base(EffectType.StartOfCombat, "Start of Combat: Gain +10 Shields.", EffectDisplayMode.Public) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var info = extraInf as ExtraEffectInfo.StartOfCombatInfo;
+
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 10;
+
+                    info.output.Add($"{gameHandler.players[curPlayer].name}'s Prismatic Barrier gives it +10 Shields, leaving it with {gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields]} Shields.");
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class ThreeFacedEmojitron : Upgrade
+        {
+            public ThreeFacedEmojitron() :
+                base(UpgradeSet.ScholomanceAcademy, "Three-Faced Emojitron", 5, 4, 2, Rarity.Common, "Choose One - Gain Rush; or +2/+2.")
+            {
+                this.effects.Add(new ChooseOne());
+            }
+
+            private class ChooseOne : Effect
+            {
+                public ChooseOne() : base(EffectType.OnPlay) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    PlayerInteraction chooseOne = new PlayerInteraction("Choose One", "1) Gain +2/+2\n2) Gain Rush", "Write the corresponding number");
+                    string ret = await chooseOne.SendInteractionAsync(gameHandler, curPlayer, (x, y, z) => GeneralFunctions.Within(x, 1, 2), GameHandler.randomGenerator.Next(1, 3).ToString(), extraInf.ctx);
+
+                    int choice = int.Parse(ret);
+
+                    if (choice == 1)
+                    {
+                        gameHandler.players[curPlayer].creatureData.attack += 2;
+                        gameHandler.players[curPlayer].creatureData.health += 2;
+                    }
+                    else if (choice == 2)
+                    {
+                        gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Rush]++;
+                    }
+                }
+            }
+        }
+
+        [Upgrade]
+        public class RivetedTrinked : Upgrade
+        {
+            public RivetedTrinked() :
+                base(UpgradeSet.ScholomanceAcademy, "Riveted Trinked", 2, 1, 1, Rarity.Common, "Binary. Battlecry: Gain +2 Shields.")
+            {
+                this.effects.Add(new Battlecry());
+                this.creatureData.staticKeywords[StaticKeyword.Binary] = 1;
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 2;
+                        
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
         public class ArcaneAutomatron : Upgrade
         {
             public ArcaneAutomatron() : 
@@ -276,6 +357,36 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                         if (extraInf is ExtraEffectInfo.StartOfCombatInfo info)
                         {
                             info.output.Add($"{gameHandler.players[curPlayer].name}'s Tighrope Champion failed to trigger.");
+                        }
+                    }
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        [Upgrade]
+        public class MetallicBroomstick : Upgrade
+        {
+            public MetallicBroomstick() :
+                base(UpgradeSet.ScholomanceAcademy, "Metallic Broomstick", 3, 1, 1, Rarity.Rare, "Rush x2. Aftermath: Give all other Mechs Rush.")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Rush] = 2;
+                this.effects.Add(new Aftermath());
+            }
+            private class Aftermath : Effect
+            {
+                public Aftermath() : base(EffectType.AftermathEnemy, "Aftermath: Give all other Mechs Rush.", EffectDisplayMode.Private) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    foreach (var player in gameHandler.players)
+                    {
+                        if (player.Key != curPlayer)
+                        {
+                            gameHandler.players[player.Key].creatureData.staticKeywords[StaticKeyword.Rush]++;
+                            gameHandler.players[player.Key].aftermathMessages.Add(
+                                $"{gameHandler.players[curPlayer].name}'s Metallic Broomstick gives you Rush.");
                         }
                     }
 
@@ -465,6 +576,84 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO: Add Lord Barox
+        [Upgrade]
+        public class LordBarox : Upgrade
+        {
+            public LordBarox() :
+                base(UpgradeSet.ScholomanceAcademy, "Lord Barox", 3, 3, 2, Rarity.Legendary, "Battlecry: Name ANY other Mech. Aftermath: If it won last round, gain 5 Mana this turn only.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    List<ulong> userIds = new List<ulong>();
+                    foreach (var player in gameHandler.players)
+                    {
+                        if (player.Key != curPlayer) userIds.Add(player.Key);
+                    }
+
+                    if (userIds.Count() == 0) return;
+
+                    string desc = string.Empty;
+
+                    for (int i=0; i<userIds.Count(); i++)
+                    {
+                        if (i != 0) desc += '\n';
+                        desc += $"{i+1}) {gameHandler.players[userIds[i]].name}";
+                    }
+
+                    var prompt = new PlayerInteraction("Name a Player other than yourself", desc, "Type the corresponding index");
+
+                    string defaultAns = (GameHandler.randomGenerator.Next(userIds.Count()) + 1).ToString();
+
+                    string ret = (await prompt.SendInteractionAsync(gameHandler, curPlayer, (x, y, z) => GeneralFunctions.Within(x, 1, userIds.Count), defaultAns, extraInf.ctx)).ToLower();
+
+                    ulong chosen = userIds[int.Parse(ret) - 1];
+
+                    gameHandler.players[curPlayer].effects.Add(new Aftermath(chosen, gameHandler.players[chosen].name));
+                }
+                private class Aftermath : Effect
+                {
+                    private ulong chosen;
+
+                    public Aftermath() : base(EffectType.Null) { this.chosen = 0; }
+                    public Aftermath(ulong chosen, string name) : 
+                        base(EffectType.AftermathMe, $"You have bet on {name}! If they win their next fight, you'll gain 5 Mana next turn.", EffectDisplayMode.Private) 
+                    {
+                        this.chosen = chosen;
+                    }
+
+                    public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                    {
+                        if (this.chosen == 0) return Task.CompletedTask;
+
+                        if (gameHandler.pairsHandler.playerResults[gameHandler.pairsHandler.playerResults.Count()-2][this.chosen] == FightResult.WIN)
+                        {
+                            gameHandler.players[curPlayer].curMana += 5;
+                            gameHandler.players[curPlayer].aftermathMessages.Add(
+                                $"The bet on your Lord Barox for {gameHandler.players[this.chosen].name} was correct! You gain 5 Mana this turn only.");
+                        }
+                        else
+                        {
+                            gameHandler.players[curPlayer].aftermathMessages.Add(
+                                $"The bet on your Lord Barox for {gameHandler.players[this.chosen].name} was incorrect.");
+                        }
+
+                        return Task.CompletedTask;
+                    }
+
+                    public override Effect Copy()
+                    {
+                        Aftermath ret = (Aftermath)base.Copy();
+                        ret.chosen = this.chosen;                         
+                        return ret;
+                    }
+                }
+            }
+        }
     }
 }

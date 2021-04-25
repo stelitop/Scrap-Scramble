@@ -144,7 +144,7 @@ namespace Scrap_Scramble_Final_Version.BotRelated.Commands.GameCommands
             await ctx.RespondAsync(embed: responseMessage).ConfigureAwait(false);
         }
 
-        [Command("refresh")]
+        //[Command("refresh")]
         [Description("Debug only command. Refreshes the player's shop with a new shop.")]
         public async Task RefreshShopDebug(CommandContext ctx)
         {

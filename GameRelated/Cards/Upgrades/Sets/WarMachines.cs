@@ -105,7 +105,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         public class MotherboardOfExotron : Upgrade
         {
             public MotherboardOfExotron() :
-                base(UpgradeSet.WarMachines, "Motherboard of Exotron", 2, 2, 1, Rarity.Common, "Tiebreaker. Overload: (1)")
+                base(UpgradeSet.WarMachines, "Motherboard of Exotron", 2, 2, 2, Rarity.Common, "Tiebreaker. Overload: (1)")
             {
                 this.creatureData.staticKeywords[StaticKeyword.Tiebreaker] = 1;
                 this.creatureData.staticKeywords[StaticKeyword.Overload] = 1;
@@ -292,7 +292,31 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
             }
         }
 
-        //TODO: Add Power Prowler
+        [Upgrade]
+        public class PowerProwler : Upgrade
+        {
+            public PowerProwler() :
+                base(UpgradeSet.WarMachines, "Power Prowler", 3, 3, 2, Rarity.Rare, "After a Start of Combat effect triggers, gain +2/+2.")
+            {
+                this.effects.Add(new SoCTrigger());
+            }
+            private class SoCTrigger : Effect
+            {
+                public SoCTrigger() : base(new EffectType[] { EffectType.OnFriendlyStartOfCombatTrigger, EffectType.OnEnemyStartOfCombatTrigger}, "After a Start of Combat effect triggers, gain +2/+2.", EffectDisplayMode.Public) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].creatureData.attack += 2;
+                    gameHandler.players[curPlayer].creatureData.health += 2;
+
+                    var info = extraInf as ExtraEffectInfo.StartOfCombatInfo;
+
+                    info.output.Add($"{gameHandler.players[curPlayer].name}'s Power Prowler triggers, giving it +2/+2, leaving it as a {gameHandler.players[curPlayer].creatureData.Stats()}.");
+
+                    return Task.CompletedTask;
+                }
+            }
+        }
         
         [Upgrade]
         public class TestMissile : Upgrade

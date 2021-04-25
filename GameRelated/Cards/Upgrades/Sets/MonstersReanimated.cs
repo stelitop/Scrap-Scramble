@@ -35,10 +35,66 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
+        public class ChillwindY3T1 : Upgrade
+        {
+            public ChillwindY3T1() :
+                base(UpgradeSet.MonstersReanimated, "Chillwind Y3T1", 4, 4, 5, Rarity.Common, "Battlecry: Freeze your shop for 1 turn.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override async Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    foreach (var u in gameHandler.players[curPlayer].shop.GetAllUpgrades())
+                    {
+                        u.creatureData.staticKeywords[StaticKeyword.Freeze] = Math.Max(1, u.creatureData.staticKeywords[StaticKeyword.Freeze]);
+
+                        await Effect.CallEffects(u.effects, EffectType.OnBeingFrozen, u, gameHandler, curPlayer, enemy, extraInf);
+                    }
+                }
+            }
+        }
+
+        [Upgrade]
+        public class AugmentedSpirit : Upgrade
+        {
+            public AugmentedSpirit() :
+                base(UpgradeSet.MonstersReanimated, "Augmented Spirit", 3, 2, 3, Rarity.Common, "Echo. Battlecry: Add a 1-Cost 0/2 Technoplasma to your hand.")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Echo] = 1;
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    gameHandler.players[curPlayer].hand.AddCard(new Technoplasma());
+
+                    return Task.CompletedTask;
+                }
+            }
+
+            [Token]
+            public class Technoplasma : Upgrade
+            {
+                public Technoplasma() :
+                    base(UpgradeSet.MonstersReanimated, "Technoplasma", 1, 0, 2, Rarity.Token)
+                {
+                    
+                }
+            }
+        }
+        
+        [Upgrade]
         public class ThreeModuleHydra : Upgrade
         {
             public ThreeModuleHydra() :
-                base(UpgradeSet.MonstersReanimated, "Three-Module Hydra", 6, 6, 6, Rarity.Rare, "Aftermath: Add a 1/1, 2/2 and 3/3 Head Module to your hand.")
+                base(UpgradeSet.MonstersReanimated, "Three-Module Hydra", 6, 6, 6, Rarity.Common, "Aftermath: Add a 1/1, 2/2 and 3/3 Head Module to your hand.")
             {
                 this.effects.Add(new Aftermath());
             }
@@ -80,6 +136,16 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                 public CenterModuleHead() :
                     base(UpgradeSet.None, "Center Module Head", 3, 3, 3, Rarity.NO_RARITY, string.Empty)
                 { }
+            }
+        }
+
+        [Upgrade]
+        public class TwoHeadedColossus : Upgrade
+        {
+            public TwoHeadedColossus() :
+                base(UpgradeSet.MonstersReanimated, "Two-Headed Colossus", 11, 11, 11, Rarity.Common, "Tiebreaker")
+            {
+                this.creatureData.staticKeywords[StaticKeyword.Tiebreaker] = 1;
             }
         }
 
@@ -141,6 +207,38 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                     {
                         gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 6;
                     }
+                }
+            }
+        }
+
+        [Upgrade]
+        public class DevouringMaw : Upgrade
+        {
+            public DevouringMaw() :
+                base(UpgradeSet.MonstersReanimated, "Devouring Maw", 7, 6, 6, Rarity.Rare, "Battlecry: Discard all Upgrades in your hand. Gain +2/+3 for each.")
+            {
+                this.effects.Add(new Battlecry());
+            }
+            private class Battlecry : Effect
+            {
+                public Battlecry() : base(EffectType.Battlecry) { }
+
+                public override Task Call(Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+                {
+                    var cardIndexes = gameHandler.players[curPlayer].hand.GetAllCardIndexes();
+
+                    foreach (var index in cardIndexes)
+                    {
+                        if (gameHandler.players[curPlayer].hand.At(index) is Upgrade u)
+                        {
+                            gameHandler.players[curPlayer].hand.RemoveCard(index);
+
+                            gameHandler.players[curPlayer].creatureData.attack += 2;
+                            gameHandler.players[curPlayer].creatureData.health += 3;
+                        }
+                    }
+
+                    return Task.CompletedTask;
                 }
             }
         }
@@ -262,10 +360,10 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         }
 
         [Upgrade]
-        public class GuardianAngel : Upgrade
+        public class TheGuardianAngel : Upgrade
         {
-            public GuardianAngel() :
-                base(UpgradeSet.MonstersReanimated, "Guardian Angel", 6, 6, 6, Rarity.Legendary, "The winner of your next combat gains a life instead of the loser losing a life. You won't see this in your shop for the rest of the game.")
+            public TheGuardianAngel() :
+                base(UpgradeSet.MonstersReanimated, "The Guardian Angel", 6, 6, 6, Rarity.Legendary, "The winner of your next combat gains a life instead of the loser losing a life. You won't see this in your shop for the rest of the game.")
             {
                 this.effects.Add(new OnPlay());
             }
@@ -279,7 +377,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
 
                     for (int i=0; i < gameHandler.players[curPlayer].pool.upgrades.Count(); i++)
                     {
-                        if (gameHandler.players[curPlayer].pool.upgrades[i].name == "Guardian Angel")
+                        if (gameHandler.players[curPlayer].pool.upgrades[i].name == "The Guardian Angel")
                         {
                             gameHandler.players[curPlayer].pool.upgrades.RemoveAt(i);
                             break;
@@ -471,7 +569,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         public class MechathunsLynchpin : Upgrade
         {
             public MechathunsLynchpin() :
-                base(UpgradeSet.MonstersReanimated, "Mecha'thun's Lynchpin", 8, 8, 8, Rarity.Rare, "Battlecry: If your Mecha'thun has 5 or fewer turns left to thaw, gain +16 Shields.")
+                base(UpgradeSet.MonstersReanimated, "Mecha'thun's Lynchpin", 8, 8, 8, Rarity.Rare, "Battlecry: If your Mecha'thun has 5 or fewer turns left to thaw, gain +24 Shields.")
             {
                 this.effects.Add(new GenerateMechathunEffect());
                 this.effects.Add(new Battlecry());
@@ -485,7 +583,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
                     var mechathun = gameHandler.players[curPlayer].shop.At(Mechathun.FindInShop(gameHandler, curPlayer));
 
                     if (mechathun.creatureData.staticKeywords[StaticKeyword.Freeze] <= 5)
-                        gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 16;
+                        gameHandler.players[curPlayer].creatureData.staticKeywords[StaticKeyword.Shields] += 24;
 
                     return Task.CompletedTask;
                 }
@@ -528,7 +626,7 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.Upgrades.Sets
         public class MechathunsLiege : Upgrade
         {
             public MechathunsLiege() :
-                base(UpgradeSet.MonstersReanimated, "Mecha'thun's Liege", 12, 12, 12, Rarity.Common, "Battlecry: Your Mecha'thun thaws 3 turns sooner. Overload: (3)")
+                base(UpgradeSet.MonstersReanimated, "Mecha'thun's Liege", 12, 12, 12, Rarity.Epic, "Battlecry: Your Mecha'thun thaws 3 turns sooner. Overload: (3)")
             {
                 this.effects.Add(new GenerateMechathunEffect());
                 this.effects.Add(new Battlecry());

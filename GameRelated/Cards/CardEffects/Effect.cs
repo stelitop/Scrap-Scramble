@@ -33,6 +33,8 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
             AfterTheEnemyAttacks,
             EndOfTurnInHand,
             OnBeingFrozen,
+            OnFriendlyStartOfCombatTrigger,
+            OnEnemyStartOfCombatTrigger,
         }
 
         public string effectText;
@@ -91,7 +93,9 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
 
             foreach (var effect in toBeCast)
             {
-                await effect.Call(caller, gameHandler, curPlayer, enemy, extraInf);                    
+                await effect.Call(caller, gameHandler, curPlayer, enemy, extraInf);
+
+                await CallSubEffects(effects, type, caller, gameHandler, curPlayer, enemy, extraInf);
             }
 
             if (!removeAfterCall)
@@ -102,6 +106,21 @@ namespace Scrap_Scramble_Final_Version.GameRelated.Cards.CardEffects
                     effects.RemoveAt(i);
                     i--;
                 }
+            }
+        }
+
+        private static async Task CallSubEffects(List<Effect> effects, EffectType type, Card caller, GameHandler gameHandler, ulong curPlayer, ulong enemy, ExtraEffectInfo extraInf)
+        {
+            switch (type)
+            {
+                case EffectType.StartOfCombat:
+
+                    await CallEffects(effects, EffectType.OnFriendlyStartOfCombatTrigger, caller, gameHandler, curPlayer, enemy, extraInf);
+                    await CallEffects(effects, EffectType.OnEnemyStartOfCombatTrigger, caller, gameHandler, enemy, curPlayer, extraInf);
+
+                    break;
+                default:
+                    break;
             }
         }
 
